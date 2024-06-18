@@ -32,7 +32,7 @@ case "$AUTOBUILD_PLATFORM" in
     linux64)
         rm -rf lib
         # Default target per autobuild --address-size
-        opts="${TARGET_OPTS:-${AUTOBUILD_GCC_ARCH} $LL_BUILD_RELEASE}"
+        opts="${TARGET_OPTS:-$LL_BUILD_RELEASE}"
 
         # Handle any deliberate platform targeting
         if [ -z "${TARGET_CPPFLAGS:-}" ]; then
