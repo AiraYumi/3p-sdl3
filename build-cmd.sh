@@ -113,7 +113,7 @@ case "$AUTOBUILD_PLATFORM" in
 
         cp -a $PREFIX_RELEASE/include/SDL3/*.* $stage/include/SDL3
         cp -a $PREFIX_RELEASE/lib/*.dylib* $stage/lib/release
-        cp -a $PREFIX_RELEASE/lib/libSDL3main.a $stage/lib/release
+        cp -a $PREFIX_RELEASE/lib/lib*.a $stage/lib/release
 
         pushd "${stage}/lib/release"
             fix_dylib_id "libSDL3.dylib"
@@ -143,7 +143,7 @@ case "$AUTOBUILD_PLATFORM" in
 
         cp -a $PREFIX_RELEASE/include/SDL3/*.* $stage/include/SDL3
         cp -a $PREFIX_RELEASE/lib/*.so* $stage/lib/release
-        cp -a $PREFIX_RELEASE/lib/libSDL3main.a $stage/lib/release
+        cp -a $PREFIX_RELEASE/lib/lib*.a $stage/lib/release
     ;;
 
     *)
@@ -152,7 +152,7 @@ case "$AUTOBUILD_PLATFORM" in
 esac
 popd
 
-SDL_VERSION=$(sed -n -e 's/^Version: //p' "$TOP/$SDL_SOURCE_DIR/build_release/SDL3.spec")
+SDL_VERSION="3.1.3"
 
 mkdir -p "$stage/LICENSES"
 cp "$TOP/$SDL_SOURCE_DIR/LICENSE.txt" "$stage/LICENSES/SDL3.txt"
