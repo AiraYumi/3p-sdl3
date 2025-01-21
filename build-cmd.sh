@@ -53,7 +53,7 @@ case "$AUTOBUILD_PLATFORM" in
 
         mkdir -p "build_debug"
         pushd "build_debug"
-            cmake .. -G "$AUTOBUILD_WIN_CMAKE_GEN" -A "$AUTOBUILD_WIN_VSPLATFORM" -DCMAKE_INSTALL_PREFIX=$(cygpath -m $stage)/debug
+            cmake .. -G "Ninja" -DCMAKE_INSTALL_PREFIX=$(cygpath -m $stage)/debug
 
             cmake --build . --config Debug
             cmake --install . --config Debug
@@ -69,7 +69,7 @@ case "$AUTOBUILD_PLATFORM" in
 
         mkdir -p "build_release"
         pushd "build_release"
-            cmake .. -G "$AUTOBUILD_WIN_CMAKE_GEN" -A "$AUTOBUILD_WIN_VSPLATFORM" -DCMAKE_INSTALL_PREFIX=$(cygpath -m $stage)/release
+            cmake .. -G "Ninja" -DCMAKE_INSTALL_PREFIX=$(cygpath -m $stage)/release
 
             cmake --build . --config Release
             cmake --install . --config Release
