@@ -28,8 +28,10 @@ source_environment_tempfile="$stage/source_environment.sh"
 "$autobuild" source_environment > "$source_environment_tempfile"
 . "$source_environment_tempfile"
 
-# remove_cxxstd
+# remove_cxxstd apply_patch
 source "$(dirname "$AUTOBUILD_VARIABLES_FILE")/functions"
+
+#apply_patch "$TOP/patches/fix-gdk-include-bug.patch" "$SDL_SOURCE_DIR"
 
 # Restore all .sos
 restore_sos ()
@@ -53,7 +55,7 @@ case "$AUTOBUILD_PLATFORM" in
 
         mkdir -p "build_debug"
         pushd "build_debug"
-            cmake .. -G "Ninja" -DCMAKE_INSTALL_PREFIX=$(cygpath -m $stage)/debug
+            cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$(cygpath -m $stage)/debug
 
             cmake --build . --config Debug
             cmake --install . --config Debug
@@ -69,7 +71,7 @@ case "$AUTOBUILD_PLATFORM" in
 
         mkdir -p "build_release"
         pushd "build_release"
-            cmake .. -G "Ninja" -DCMAKE_INSTALL_PREFIX=$(cygpath -m $stage)/release
+            cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(cygpath -m $stage)/release
 
             cmake --build . --config Release
             cmake --install . --config Release
@@ -93,19 +95,29 @@ case "$AUTOBUILD_PLATFORM" in
             cc_opts="$(remove_cxxstd $opts)"
             ld_opts="$ARCH_ARGS"
 
+            if [ "$arch" = "x86_64" ] ; then
+                SDL_CPU_X64="1"
+                SDL_CPU_ARM64="0"
+            else
+                SDL_CPU_X64="0"
+                SDL_CPU_ARM64="1"
+            fi
+
             mkdir -p "build_$arch"
             pushd "build_$arch"
                 CFLAGS="$cc_opts" \
                 CXXFLAGS="$opts" \
                 LDFLAGS="$ld_opts" \
-                cmake .. -GNinja -DCMAKE_BUILD_TYPE="Release" \
+                cmake .. -G Ninja -DCMAKE_BUILD_TYPE="Release" -DCMAKE_CONFIGURATION_TYPES="Release" \
                     -DCMAKE_C_FLAGS="$cc_opts" \
                     -DCMAKE_CXX_FLAGS="$opts" \
                     -DCMAKE_OSX_ARCHITECTURES:STRING="$arch" \
                     -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET} \
                     -DCMAKE_MACOSX_RPATH=YES \
                     -DCMAKE_INSTALL_PREFIX="$stage" \
-                    -DCMAKE_INSTALL_LIBDIR="$stage/lib/release/$arch"
+                    -DCMAKE_INSTALL_LIBDIR="$stage/lib/release/$arch" \
+                    -DSDL_CPU_ARM64="$SDL_CPU_ARM64" \
+                    -DSDL_CPU_X64="$SDL_CPU_X64"
 
                 cmake --build . --config Release
                 cmake --install . --config Release
@@ -114,7 +126,6 @@ case "$AUTOBUILD_PLATFORM" in
 
 
         # create universal libraries
-        lipo -create -output ${stage}/lib/release/libSDL3.0.dylib ${stage}/lib/release/x86_64/libSDL3.0.dylib ${stage}/lib/release/arm64/libSDL3.0.dylib
         lipo -create -output ${stage}/lib/release/libSDL3.dylib ${stage}/lib/release/x86_64/libSDL3.dylib ${stage}/lib/release/arm64/libSDL3.dylib
         lipo -create -output ${stage}/lib/release/libSDL3_test.a ${stage}/lib/release/x86_64/libSDL3_test.a ${stage}/lib/release/arm64/libSDL3_test.a
 
@@ -147,7 +158,6 @@ case "$AUTOBUILD_PLATFORM" in
 
         cp -a $PREFIX_RELEASE/include/SDL3/*.* $stage/include/SDL3
         cp -a $PREFIX_RELEASE/lib/*.so* $stage/lib/release
-        cp -a $PREFIX_RELEASE/lib/lib*.a $stage/lib/release
     ;;
 
     *)
@@ -156,8 +166,5 @@ case "$AUTOBUILD_PLATFORM" in
 esac
 popd
 
-SDL_VERSION="3.2.0"
-
 mkdir -p "$stage/LICENSES"
 cp "$TOP/$SDL_SOURCE_DIR/LICENSE.txt" "$stage/LICENSES/SDL3.txt"
-echo "$SDL_VERSION" > "$stage/VERSION.txt"
